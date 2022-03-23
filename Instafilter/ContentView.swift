@@ -12,6 +12,9 @@ import SwiftUI
 struct ContentView: View {
     @State private var image: Image?
     @State private var filterIntensity = 0.5
+    @State private var filterRadius = 0.1
+    @State private var filterScale = 0.1
+    
     
     @State private var inputImage: UIImage?
     @State private var processedImage: UIImage?
@@ -21,6 +24,18 @@ struct ContentView: View {
     let context  = CIContext()
     
     @State private var showingFilterSheet = false
+    
+    private var isFilterIntensity: Bool {
+        currentFilter.inputKeys.contains(kCIInputIntensityKey)
+    }
+    
+    private var isFilterRadius: Bool {
+        currentFilter.inputKeys.contains(kCIInputRadiusKey)
+    }
+    
+    private var isFilterScale: Bool {
+        currentFilter.inputKeys.contains(kCIInputScaleKey)
+    }
     
     var body: some View {
         NavigationView {
@@ -46,7 +61,27 @@ struct ContentView: View {
                             applyProcessing()
                         }
                 }
-                .padding(.vertical)
+                .disabled(!isFilterIntensity)
+                .opacity(!isFilterIntensity ? 0.2 : 1)
+                HStack {
+                    Text("Radius")
+                    Slider(value: $filterRadius, in: 0.01...1)
+                        .onChange(of: filterRadius) { _ in
+                            applyProcessing()
+                        }
+                }
+                .disabled(!isFilterRadius)
+                .opacity(!isFilterRadius ? 0.2 : 1)
+                HStack {
+                    Text("Scale")
+                    Slider(value: $filterScale, in: 0.01...1)
+                        .onChange(of: filterScale) { _ in
+                            applyProcessing()
+                        }
+                }
+                .disabled(!isFilterScale)
+                .opacity(!isFilterScale ? 0.2 : 1)
+                .padding([.bottom])
                 
                 HStack {
                     Button("Change Filter") {
@@ -104,16 +139,14 @@ struct ContentView: View {
     }
     
     func applyProcessing() {
-        let inputKeys = currentFilter.inputKeys
-        
-        if inputKeys.contains(kCIInputIntensityKey) {
+        if isFilterIntensity {
             currentFilter.setValue(filterIntensity, forKey: kCIInputIntensityKey)
         }
-        if inputKeys.contains(kCIInputRadiusKey) {
-            currentFilter.setValue(filterIntensity * 200, forKey: kCIInputRadiusKey)
+        if isFilterRadius {
+            currentFilter.setValue(filterRadius * 200, forKey: kCIInputRadiusKey)
         }
-        if inputKeys.contains(kCIInputScaleKey) {
-            currentFilter.setValue(filterIntensity * 10, forKey: kCIInputScaleKey)
+        if isFilterScale {
+            currentFilter.setValue(filterScale * 10, forKey: kCIInputScaleKey)
         }
         
         guard let outputImage = currentFilter.outputImage else { return }
